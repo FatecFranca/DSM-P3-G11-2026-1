@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
@@ -12,14 +13,11 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public')); // Garante que seu login.html e index.html sejam lidos
-
 // ======================================================================
 // 1. CONFIGURAÇÃO DO BANCO DE DADOS NOSQL (MONGODB)
 // ======================================================================
 
-// Dica: Quando for hospedar na nuvem, trocaremos esse link por um do MongoDB Atlas!
-// Agora apontando para a NUVEM! (Não esqueça de colocar sua senha real)
-const mongoURI = 'mongodb+srv://dsm3:Batatinha1Quando2Nasce3@cluster0.gia5fgw.mongodb.net/invista_mais?appName=Cluster0';
+const mongoURI = process.env.MONGO_URI;
 
 mongoose.connect(mongoURI)
     .then(() => console.log('✅ Banco de Dados NoSQL (MongoDB Atlas) conectado com sucesso!'))
