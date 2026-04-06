@@ -1,0 +1,69 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam ClassBackgroundColor #F8F9FA
+skinparam ClassBorderColor #0052cc
+skinparam ClassHeaderBackgroundColor #e3f2fd
+
+' ENTIDADE 1
+class Usuario {
+  + ObjectId _id [Obrigatório]
+  + String email [Obrigatório]
+  + String senhaHash [Obrigatório]
+  + String perfilInvestidor [Opcional]
+  + Date dataCadastro [Obrigatório]
+}
+
+' ENTIDADE 2
+class HistoricoBusca {
+  + ObjectId _id [Obrigatório]
+  + Date dataHoraBusca [Obrigatório]
+  + String tickerBuscado [Obrigatório]
+  + Boolean sucesso [Obrigatório]
+}
+
+' ENTIDADE 3
+class AnaliseFundamentalista {
+  + ObjectId _id [Obrigatório]
+  + String perfilUtilizado [Obrigatório]
+  + Double precoJustoGraham [Opcional]
+  + Double precoTetoBazin [Opcional]
+  + Double dividendYield [Opcional]
+  + Double pvp [Opcional]
+  + String classificacaoGeral [Opcional]
+}
+
+' ENTIDADE 4
+class AtivoFinanceiro {
+  + ObjectId _id [Obrigatório]
+  + String ticker [Obrigatório]
+  + String tipoAtivo [Obrigatório]
+  + Double cotacaoAtual [Obrigatório]
+  + Date ultimaAtualizacao [Obrigatório]
+}
+
+' ENTIDADE 5
+class SetorAtivo {
+  + ObjectId _id [Obrigatório]
+  + String nomeSetor [Obrigatório]
+  + String descricao [Opcional]
+}
+
+' ==========================================
+' RELACIONAMENTOS, TIPOS E CARDINALIDADES
+' ==========================================
+
+' Composição: Se o Usuário for deletado, seu histórico de buscas também é (aninhado no NoSQL).
+Usuario "1" *-- "0..*" HistoricoBusca : Composição >
+
+' Composição: Uma análise só existe porque uma busca específica foi feita.
+HistoricoBusca "1" *-- "1" AnaliseFundamentalista : Composição >
+
+' Associação: O histórico apenas "conhece/aponta" para o Ativo que foi buscado.
+HistoricoBusca "0..*" --> "1" AtivoFinanceiro : Associação >
+
+' Agregação: Um Setor agrupa vários ativos, mas o ativo continua existindo se o setor sumir.
+SetorAtivo "1" o-- "0..*" AtivoFinanceiro : Agregação >
+
+@enduml
