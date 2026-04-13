@@ -1,0 +1,150 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Usuario -->
+    <mxCell id="2" value="Usuario" style="swimlane;fontStyle=1;align=center;startSize=26;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="260" y="20" width="240" height="136" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="+ObjectId _id [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="2">
+      <mxGeometry y="26" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="+String email [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="2">
+      <mxGeometry y="48" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="+String senhaHash [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="2">
+      <mxGeometry y="70" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="+String perfilInvestidor [Opcional]" style="text;align=left;spacingLeft=4;" vertex="1" parent="2">
+      <mxGeometry y="92" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="+Date dataCadastro [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="2">
+      <mxGeometry y="114" width="240" height="22" as="geometry" />
+    </mxCell>
+
+    <!-- HistoricoBusca -->
+    <mxCell id="8" value="HistoricoBusca" style="swimlane;fontStyle=1;align=center;startSize=26;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="260" y="240" width="240" height="114" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="+ObjectId _id [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="8">
+      <mxGeometry y="26" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="+Date dataHoraBusca [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="8">
+      <mxGeometry y="48" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="+String tickerBuscado [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="8">
+      <mxGeometry y="70" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="+Boolean sucesso [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="8">
+      <mxGeometry y="92" width="240" height="22" as="geometry" />
+    </mxCell>
+
+    <!-- AnaliseFundamentalista -->
+    <mxCell id="13" value="AnaliseFundamentalista" style="swimlane;fontStyle=1;align=center;startSize=26;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="20" y="460" width="260" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="+ObjectId _id [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="13">
+      <mxGeometry y="26" width="260" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="+String perfilUtilizado [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="13">
+      <mxGeometry y="48" width="260" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="+Double precoJustoGraham [Opcional]" style="text;align=left;spacingLeft=4;" vertex="1" parent="13">
+      <mxGeometry y="70" width="260" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="+Double precoTetoBazin [Opcional]" style="text;align=left;spacingLeft=4;" vertex="1" parent="13">
+      <mxGeometry y="92" width="260" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="+Double dividendYield [Opcional]" style="text;align=left;spacingLeft=4;" vertex="1" parent="13">
+      <mxGeometry y="114" width="260" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="+Double pvp [Opcional]" style="text;align=left;spacingLeft=4;" vertex="1" parent="13">
+      <mxGeometry y="136" width="260" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="+String classificacaoGeral [Opcional]" style="text;align=left;spacingLeft=4;" vertex="1" parent="13">
+      <mxGeometry y="158" width="260" height="22" as="geometry" />
+    </mxCell>
+
+    <!-- AtivoFinanceiro -->
+    <mxCell id="21" value="AtivoFinanceiro" style="swimlane;fontStyle=1;align=center;startSize=26;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="560" y="460" width="240" height="136" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="+ObjectId _id [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="21">
+      <mxGeometry y="26" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="+String ticker [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="21">
+      <mxGeometry y="48" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="+String tipoAtivo [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="21">
+      <mxGeometry y="70" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="+Double cotacaoAtual [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="21">
+      <mxGeometry y="92" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="26" value="+Date ultimaAtualizacao [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="21">
+      <mxGeometry y="114" width="240" height="22" as="geometry" />
+    </mxCell>
+
+    <!-- SetorAtivo -->
+    <mxCell id="27" value="SetorAtivo" style="swimlane;fontStyle=1;align=center;startSize=26;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="560" y="240" width="240" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="28" value="+ObjectId _id [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="27">
+      <mxGeometry y="26" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="29" value="+String nomeSetor [Obrigatório]" style="text;align=left;spacingLeft=4;" vertex="1" parent="27">
+      <mxGeometry y="48" width="240" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="+String descricao [Opcional]" style="text;align=left;spacingLeft=4;" vertex="1" parent="27">
+      <mxGeometry y="70" width="240" height="22" as="geometry" />
+    </mxCell>
+
+    <!-- Relação: Usuario 1 *- - 0..* HistoricoBusca (Composição) -->
+    <mxCell id="31" value="Composição" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;startArrow=ERmanyToOne;startFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="2" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="32" value="1" style="resizable=0;html=1;align=left;verticalAlign=bottom;" vertex="1" connectable="0" parent="31">
+      <mxGeometry x="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+    <mxCell id="33" value="0..*" style="resizable=0;html=1;align=right;verticalAlign=bottom;" vertex="1" connectable="0" parent="31">
+      <mxGeometry x="1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+
+    <!-- Relação: HistoricoBusca 1 *- - 1 AnaliseFundamentalista (Composição) -->
+    <mxCell id="34" value="Composição" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;startArrow=ERmanyToOne;startFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="8" target="13" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="1" style="resizable=0;html=1;align=left;verticalAlign=bottom;" vertex="1" connectable="0" parent="34">
+      <mxGeometry x="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+    <mxCell id="36" value="1" style="resizable=0;html=1;align=right;verticalAlign=bottom;" vertex="1" connectable="0" parent="34">
+      <mxGeometry x="1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+
+    <!-- Relação: HistoricoBusca 0..* --> 1 AtivoFinanceiro (Associação) -->
+    <mxCell id="37" value="Associação" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="8" target="21" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="38" value="0..*" style="resizable=0;html=1;align=left;verticalAlign=bottom;" vertex="1" connectable="0" parent="37">
+      <mxGeometry x="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+    <mxCell id="39" value="1" style="resizable=0;html=1;align=right;verticalAlign=bottom;" vertex="1" connectable="0" parent="37">
+      <mxGeometry x="1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+
+    <!-- Relação: SetorAtivo 1 o- - 0..* AtivoFinanceiro (Agregação) -->
+    <mxCell id="40" value="Agregação" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;startArrow=ERmanyToOne;startFill=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="27" target="21" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="41" value="1" style="resizable=0;html=1;align=left;verticalAlign=bottom;" vertex="1" connectable="0" parent="40">
+      <mxGeometry x="-1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+    <mxCell id="42" value="0..*" style="resizable=0;html=1;align=right;verticalAlign=bottom;" vertex="1" connectable="0" parent="40">
+      <mxGeometry x="1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
