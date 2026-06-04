@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getAuthToken } from "@/lib/auth";
 
 // Helpers para formatação de dados do Scanner
 const formatData = (dataObj: any, forceNeutral: boolean = false) => {
@@ -74,9 +75,13 @@ export default function Scanner() {
     const endpoint = mode === 'acoes' ? '/api/acoes' : '/api/fiis';
 
     try {
+      const token = getAuthToken();
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ ticker: trimmedTicker, profile })
       });
       const data = await response.json();

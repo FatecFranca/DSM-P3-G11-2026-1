@@ -102,6 +102,22 @@ body {
   margin-left: auto;
 }
 
+.header-user-email {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.btn-logout {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .btn-auth.small {
   display: inline-flex;
   align-items: center;
