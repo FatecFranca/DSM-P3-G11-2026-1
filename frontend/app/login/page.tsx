@@ -51,7 +51,7 @@ export default function Login() {
         <h1>{isLoginMode ? "Bem-vindo" : "Criar Conta"}</h1>
         <p>
           {isLoginMode
-            ? "Entre para analisar seus ativos na B3"
+            ? "Entre para analisar seus ativos com a Invista"
             : "Comece a investir de forma inteligente"}
         </p>
 
