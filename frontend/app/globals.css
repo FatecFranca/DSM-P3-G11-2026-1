@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 :root {
   --bg-color: #f4f7fa;
   --card-bg: #ffffff;
@@ -18,7 +16,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
   margin: 0;
@@ -92,7 +90,7 @@ body {
   border-radius: 8px;
   border: 1px solid var(--border);
   background-color: var(--card-bg);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
   font-size: 1rem;
   color: var(--text-main);
   outline: none;
@@ -291,7 +289,7 @@ body {
   border-radius: 8px;
   box-sizing: border-box;
   font-size: 16px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
   transition: border-color 0.3s;
 }
 
@@ -312,7 +310,7 @@ body {
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
 }
 
 .btn-auth:hover {
