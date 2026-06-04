@@ -246,10 +246,12 @@ export default function Scanner() {
               
               {result && status === 'idle' && (
                 <>
-                  <div className="results-header">
-                    {mode === 'acoes' ? 'Relatório Fundamentalista' : 'Relatório do Fundo'}
-                    <span className="profile-badge">{result.perfilAtivo ? result.perfilAtivo.charAt(0).toUpperCase() + result.perfilAtivo.slice(1) : ''}</span>
+                  <div className="results-header" style={{ marginBottom: '28px' }}>
+                    <div>{mode === 'acoes' ? 'Relatório Fundamentalista' : 'Relatório do Fundo'}</div>
                     <span className="ticker-title">{result.ticker}</span>
+                    <span className="profile-badge" style={{ marginLeft: '0', marginTop: '8px', display: 'inline-block' }}>
+                      {result.perfilAtivo ? result.perfilAtivo.charAt(0).toUpperCase() + result.perfilAtivo.slice(1) : ''}
+                    </span>
                   </div>
 
                   {mode === 'acoes' ? (
