@@ -69,7 +69,7 @@ export async function persistirFluxoNoam({
                 ultimaAtualizacao: new Date(),
                 ...(setorAtivoId ? { setorAtivoId } : {}),
             },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
+            { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
         );
 
         ativoFinanceiroId = ativo._id;

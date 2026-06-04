@@ -105,6 +105,27 @@ const COLLECTIONS = [
             { key: { historicoBuscaId: 1 }, unique: true, name: 'historicoBuscaId_unique' },
         ],
     },
+    {
+        name: 'favoritos',
+        validator: {
+            $jsonSchema: {
+                bsonType: 'object',
+                required: ['usuarioId', 'ticker', 'tipoAtivo', 'perfilUtilizado', 'dataFavorito'],
+                properties: {
+                    usuarioId: { bsonType: 'objectId' },
+                    ticker: { bsonType: 'string' },
+                    tipoAtivo: { bsonType: 'string' },
+                    perfilUtilizado: { bsonType: 'string' },
+                    dataFavorito: { bsonType: 'date' },
+                    ativoFinanceiroId: { bsonType: 'objectId' },
+                },
+            },
+        },
+        indexes: [
+            { key: { usuarioId: 1, ticker: 1, tipoAtivo: 1 }, unique: true, name: 'usuario_ticker_tipo_unique' },
+            { key: { usuarioId: 1, tipoAtivo: 1, dataFavorito: -1 }, name: 'usuario_tipo_data_idx' },
+        ],
+    },
 ];
 
 async function ensureCollection(db, { name, validator }) {

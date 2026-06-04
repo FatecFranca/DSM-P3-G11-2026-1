@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev:server\" \"npm run dev:frontend\"",
-    "dev:server": "node --watch --watch-path=scripts server.js",
+    "dev:server": "node --watch server.js --watch-path=./models --watch-path=./services --watch-path=./middleware",
     "dev:frontend": "npm run dev --prefix frontend",
     "db:init": "node scripts/init-collections.js"
   },

@@ -7,8 +7,14 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Usuario } from './models/noam.js';
-import { createOptionalAuth } from './middleware/auth.js';
+import { createOptionalAuth, createRequireAuth } from './middleware/auth.js';
 import { calcularClassificacaoGeral, persistirFluxoNoam } from './services/noam-persist.js';
+import {
+    adicionarFavorito,
+    listarFavoritos,
+    normalizarTipoAtivo,
+    removerFavorito,
+} from './services/favoritos.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -28,6 +34,7 @@ mongoose.connect(mongoURI)
 
 const JWT_SECRET = process.env.JWT_SECRET || 'minha_chave_secreta_super_segura_2026';
 const optionalAuth = createOptionalAuth(JWT_SECRET);
+const requireAuth = createRequireAuth(JWT_SECRET);
 
 // ======================================================================
 // 2. ROTAS DE AUTENTICAÇÃO (O QUE O SEU LOGIN.HTML CHAMA)
@@ -724,6 +731,71 @@ app.post('/api/fiis', optionalAuth, async (req, res) => {
             }).catch((err) => console.error('Erro ao persistir histórico (FIIs):', err.message));
         }
         res.status(404).json({ error: 'Fundo não encontrado.' });
+    }
+});
+
+// ======================================================================
+// 4. FAVORITOS (busca rápida com perfil salvo)
+// ======================================================================
+
+app.get('/api/favoritos', requireAuth, async (req, res) => {
+    try {
+        const tipoAtivo = normalizarTipoAtivo(req.query.tipoAtivo);
+        const favoritos = await listarFavoritos(req.usuarioId, tipoAtivo);
+        res.json({ favoritos });
+    } catch (error) {
+        console.error('Erro ao listar favoritos:', error);
+        res.status(500).json({ error: 'Erro ao listar favoritos.' });
+    }
+});
+
+app.post('/api/favoritos', requireAuth, async (req, res) => {
+    const { ticker, tipoAtivo, profile } = req.body;
+
+    if (!ticker?.trim()) {
+        return res.status(400).json({ error: 'Ticker não informado.' });
+    }
+
+    const tipo = normalizarTipoAtivo(tipoAtivo);
+    if (!tipo) {
+        return res.status(400).json({ error: 'tipoAtivo deve ser ACAO ou FII.' });
+    }
+
+    try {
+        const favorito = await adicionarFavorito({
+            usuarioId: req.usuarioId,
+            ticker: ticker.trim(),
+            tipoAtivo: tipo,
+            perfilUtilizado: profile,
+        });
+        res.status(201).json({ favorito });
+    } catch (error) {
+        console.error('Erro ao favoritar:', error);
+        res.status(500).json({ error: 'Erro ao salvar favorito.' });
+    }
+});
+
+app.delete('/api/favoritos/:ticker', requireAuth, async (req, res) => {
+    const tipoAtivo = normalizarTipoAtivo(req.query.tipoAtivo);
+    if (!tipoAtivo) {
+        return res.status(400).json({ error: 'Informe tipoAtivo (ACAO ou FII) na query.' });
+    }
+
+    try {
+        const removido = await removerFavorito({
+            usuarioId: req.usuarioId,
+            ticker: req.params.ticker,
+            tipoAtivo,
+        });
+
+        if (!removido) {
+            return res.status(404).json({ error: 'Favorito não encontrado.' });
+        }
+
+        res.json({ message: 'Favorito removido.' });
+    } catch (error) {
+        console.error('Erro ao remover favorito:', error);
+        res.status(500).json({ error: 'Erro ao remover favorito.' });
     }
 });
 

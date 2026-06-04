@@ -67,3 +67,20 @@ export const HistoricoBusca =
 export const AnaliseFundamentalista =
     mongoose.models.AnaliseFundamentalista ||
     mongoose.model('AnaliseFundamentalista', analiseFundamentalistaSchema);
+
+const favoritoSchema = new mongoose.Schema(
+    {
+        usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', required: true },
+        ticker: { type: String, required: true },
+        tipoAtivo: { type: String, required: true, enum: ['ACAO', 'FII'] },
+        perfilUtilizado: { type: String, required: true },
+        dataFavorito: { type: Date, required: true, default: Date.now },
+        ativoFinanceiroId: { type: mongoose.Schema.Types.ObjectId, ref: 'AtivoFinanceiro' },
+    },
+    { collection: 'favoritos' }
+);
+
+favoritoSchema.index({ usuarioId: 1, ticker: 1, tipoAtivo: 1 }, { unique: true });
+favoritoSchema.index({ usuarioId: 1, tipoAtivo: 1, dataFavorito: -1 });
+
+export const Favorito = mongoose.models.Favorito || mongoose.model('Favorito', favoritoSchema);
