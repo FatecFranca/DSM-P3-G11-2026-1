@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Invista - Análise Inteligente de Investimentos",
+  title: "Invista+ - Análise Inteligente de Investimentos",
   description: "Plataforma de análise inteligente de ações e FIIs com educação financeira",
   viewport: "width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes",
 };
@@ -40,8 +40,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <header className="site-header">
           <div className="container header-inner">
-            <a href="/" className="logo-link" aria-label="Invista">
-              <img src="/logo.svg" alt="Invista" className="site-logo" />
+            <a href="/" className="logo-link" aria-label="Invista+">
+              <img src="/logo.svg" alt="Invista+" className="site-logo" />
             </a>
             <div className="header-actions">
               <a href="/login" className="btn-auth small">Entrar</a>
