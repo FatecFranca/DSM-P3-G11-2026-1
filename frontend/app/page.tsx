@@ -1,6 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { getAuthToken, isLoggedIn } from "@/lib/auth";
+
+type FavoritoItem = {
+  ticker: string;
+  tipoAtivo: "ACAO" | "FII";
+  perfilUtilizado: string;
+  dataFavorito: string;
+};
+
+const perfilLabel = (perfil: string) =>
+  perfil ? perfil.charAt(0).toUpperCase() + perfil.slice(1) : "";
 
 // Helpers para formatação de dados do Scanner
 const formatData = (dataObj: any, forceNeutral: boolean = false) => {
@@ -40,8 +51,11 @@ const conceitos = [
   { id: 3, title: "Dividendos", icon: "💰", text: "É o 'salário' que seus investimentos te pagam. Parte do lucro líquido da empresa distribuído diretamente na conta da corretora, livre de impostos." },
 ];
 
+type AppMode = 'acoes' | 'fiis' | 'educacao' | 'favoritos';
+
 export default function Scanner() {
-  const [mode, setMode] = useState<'acoes' | 'fiis' | 'educacao'>('acoes');
+  const [mode, setMode] = useState<AppMode>('acoes');
+  const [favoritosSubTab, setFavoritosSubTab] = useState<'acoes' | 'fiis'>('acoes');
   
   // Estados do Scanner
   const [profile, setProfile] = useState('moderado');
@@ -49,6 +63,9 @@ export default function Scanner() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [result, setResult] = useState<any>(null);
+  const [favoritos, setFavoritos] = useState<FavoritoItem[]>([]);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favBusy, setFavBusy] = useState(false);
 
   // Estados da Educação Interativa
   const [eduTab, setEduTab] = useState<'conceitos' | 'simulador'>('conceitos');
@@ -59,31 +76,195 @@ export default function Scanner() {
   const [simTempo, setSimTempo] = useState(10);
   const [simYield, setSimYield] = useState(10);
 
-  const handleModeChange = (newMode: 'acoes' | 'fiis' | 'educacao') => {
+  const handleModeChange = (newMode: AppMode) => {
     setMode(newMode);
     setTicker('');
     setResult(null);
     setStatus('idle');
+    setIsFavorited(false);
+    setErrorMsg('');
   };
 
-  const handleSearch = async () => {
-    const trimmedTicker = ticker.trim().toUpperCase();
-    if (!trimmedTicker) { setErrorMsg('Por favor, digite um ticker válido.'); setStatus('error'); return; }
+  const authHeaders = useCallback(() => {
+    const token = getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, []);
 
-    setStatus('loading'); setResult(null);
-    const endpoint = mode === 'acoes' ? '/api/acoes' : '/api/fiis';
+  const carregarFavoritos = useCallback(async () => {
+    if (!isLoggedIn()) {
+      setFavoritos([]);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/favoritos', {
+        headers: authHeaders(),
+      });
+      if (!response.ok) {
+        setFavoritos([]);
+        return;
+      }
+      const data = await response.json();
+      setFavoritos(data.favoritos || []);
+    } catch {
+      setFavoritos([]);
+    }
+  }, [authHeaders]);
+
+  useEffect(() => {
+    if (isLoggedIn()) {
+      void carregarFavoritos();
+    } else {
+      setFavoritos([]);
+    }
+  }, [carregarFavoritos]);
+
+  useEffect(() => {
+    const onAuthChange = () => {
+      if (isLoggedIn()) void carregarFavoritos();
+      else setFavoritos([]);
+    };
+    window.addEventListener('auth-change', onAuthChange);
+    window.addEventListener('storage', onAuthChange);
+    return () => {
+      window.removeEventListener('auth-change', onAuthChange);
+      window.removeEventListener('storage', onAuthChange);
+    };
+  }, [carregarFavoritos]);
+
+  useEffect(() => {
+    if (!result || !isLoggedIn()) {
+      setIsFavorited(false);
+      return;
+    }
+    const tipoAtivo = mode === 'acoes' ? 'ACAO' : 'FII';
+    setIsFavorited(
+      favoritos.some((f) => f.ticker === result.ticker && f.tipoAtivo === tipoAtivo)
+    );
+  }, [result, favoritos, mode]);
+
+  const handleSearch = async (opts?: {
+    ticker?: string;
+    profile?: string;
+    searchMode?: 'acoes' | 'fiis';
+  }) => {
+    const searchMode = opts?.searchMode ?? (mode === 'educacao' ? 'acoes' : mode);
+    const trimmedTicker = (opts?.ticker ?? ticker).trim().toUpperCase();
+    const searchProfile = opts?.profile ?? profile;
+
+    if (!trimmedTicker) {
+      setErrorMsg('Por favor, digite um ticker válido.');
+      setStatus('error');
+      return;
+    }
+
+    if (opts?.ticker) setTicker(opts.ticker);
+    if (opts?.profile) setProfile(opts.profile);
+
+    setStatus('loading');
+    setResult(null);
+    const endpoint = searchMode === 'acoes' ? '/api/acoes' : '/api/fiis';
 
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker: trimmedTicker, profile })
+        headers: authHeaders(),
+        body: JSON.stringify({ ticker: trimmedTicker, profile: searchProfile }),
       });
       const data = await response.json();
-      if (!response.ok) { setErrorMsg(data.error || 'Erro na requisição'); setStatus('error'); return; }
-      setResult(data); setStatus('idle');
-    } catch (error) {
-      setErrorMsg('Erro ao conectar com o servidor local. Verifique o terminal.'); setStatus('error');
+      if (!response.ok) {
+        setErrorMsg(data.error || 'Erro na requisição');
+        setStatus('error');
+        return;
+      }
+      setResult(data);
+      setStatus('idle');
+    } catch {
+      setErrorMsg('Erro ao conectar com o servidor local. Verifique o terminal.');
+      setStatus('error');
+    }
+  };
+
+  const handleFavoritoClick = (fav: FavoritoItem) => {
+    const searchMode = fav.tipoAtivo === 'ACAO' ? 'acoes' : 'fiis';
+    setMode(searchMode);
+    void handleSearch({
+      ticker: fav.ticker,
+      profile: fav.perfilUtilizado,
+      searchMode,
+    });
+  };
+
+  const removerFavoritoDaLista = async (fav: FavoritoItem) => {
+    if (!isLoggedIn() || favBusy) return;
+    setFavBusy(true);
+    try {
+      const response = await fetch(
+        `/api/favoritos/${encodeURIComponent(fav.ticker)}?tipoAtivo=${fav.tipoAtivo}`,
+        { method: 'DELETE', headers: authHeaders() }
+      );
+      if (response.ok) {
+        setFavoritos((prev) =>
+          prev.filter((f) => !(f.ticker === fav.ticker && f.tipoAtivo === fav.tipoAtivo))
+        );
+        if (result?.ticker === fav.ticker) {
+          const tipoAtual = mode === 'acoes' ? 'ACAO' : 'FII';
+          if (fav.tipoAtivo === tipoAtual) setIsFavorited(false);
+        }
+      }
+    } finally {
+      setFavBusy(false);
+    }
+  };
+
+  const favoritosFiltrados = favoritos.filter((f) =>
+    favoritosSubTab === 'acoes' ? f.tipoAtivo === 'ACAO' : f.tipoAtivo === 'FII'
+  );
+
+  const toggleFavorito = async () => {
+    if (!result || !isLoggedIn() || favBusy) return;
+
+    const tipoAtivo = mode === 'acoes' ? 'ACAO' : 'FII';
+    setFavBusy(true);
+
+    try {
+      if (isFavorited) {
+        const response = await fetch(
+          `/api/favoritos/${encodeURIComponent(result.ticker)}?tipoAtivo=${tipoAtivo}`,
+          { method: 'DELETE', headers: authHeaders() }
+        );
+        if (response.ok) {
+          setIsFavorited(false);
+          setFavoritos((prev) =>
+            prev.filter((f) => !(f.ticker === result.ticker && f.tipoAtivo === tipoAtivo))
+          );
+        }
+      } else {
+        const response = await fetch('/api/favoritos', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            ticker: result.ticker,
+            tipoAtivo,
+            profile: result.perfilAtivo || profile,
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsFavorited(true);
+          setFavoritos((prev) => {
+            const semDuplicata = prev.filter(
+              (f) => !(f.ticker === data.favorito.ticker && f.tipoAtivo === data.favorito.tipoAtivo)
+            );
+            return [data.favorito, ...semDuplicata];
+          });
+        }
+      }
+    } finally {
+      setFavBusy(false);
     }
   };
 
@@ -121,11 +302,83 @@ export default function Scanner() {
         <div className="header-tabs">
           <button className={`tab-btn ${mode === 'acoes' ? 'active' : ''}`} onClick={() => handleModeChange('acoes')}>Ações</button>
           <button className={`tab-btn ${mode === 'fiis' ? 'active' : ''}`} onClick={() => handleModeChange('fiis')}>FIIs</button>
+          <button className={`tab-btn ${mode === 'favoritos' ? 'active' : ''}`} onClick={() => handleModeChange('favoritos')}>Favoritos</button>
           <button className={`tab-btn ${mode === 'educacao' ? 'active' : ''}`} onClick={() => handleModeChange('educacao')}>Educação Básica</button>
         </div>
 
+        {/* ABA FAVORITOS */}
+        {mode === 'favoritos' && (
+          <div className="favoritos-page">
+            <div className="results-header report-header">
+              <div className="report-header-inner">
+                <div>Meus Favoritos</div>
+                <span className="ticker-title" style={{ fontSize: '1.35rem' }}>
+                  Acompanhe ativos salvos
+                </span>
+              </div>
+            </div>
+
+            <div className="favoritos-subtabs">
+              <button
+                type="button"
+                className={`tab-btn ${favoritosSubTab === 'acoes' ? 'active' : ''}`}
+                onClick={() => setFavoritosSubTab('acoes')}
+              >
+                Ações
+              </button>
+              <button
+                type="button"
+                className={`tab-btn ${favoritosSubTab === 'fiis' ? 'active' : ''}`}
+                onClick={() => setFavoritosSubTab('fiis')}
+              >
+                FIIs
+              </button>
+            </div>
+
+            {!isLoggedIn() ? (
+              <div className="message">Faça login para ver e gerenciar seus favoritos.</div>
+            ) : favoritosFiltrados.length === 0 ? (
+              <div className="message">
+                Nenhum {favoritosSubTab === 'acoes' ? 'ação' : 'FII'} favoritado ainda. Pesquise um ativo e use o botão ☆ Favoritar no relatório.
+              </div>
+            ) : (
+              <ul className="favoritos-panel">
+                {favoritosFiltrados.map((fav) => (
+                  <li key={`${fav.ticker}-${fav.tipoAtivo}`} className="favorito-card">
+                    <div className="favorito-card-info">
+                      <strong className="favorito-card-ticker">{fav.ticker}</strong>
+                      <span className="profile-badge">{perfilLabel(fav.perfilUtilizado)}</span>
+                      <span className="favorito-card-date">
+                        Salvo em{' '}
+                        {new Date(fav.dataFavorito).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    <div className="favorito-card-actions">
+                      <button type="button" className="favorito-card-btn primary" onClick={() => handleFavoritoClick(fav)}>
+                        Ver análise
+                      </button>
+                      <button
+                        type="button"
+                        className="favorito-card-btn"
+                        onClick={() => void removerFavoritoDaLista(fav)}
+                        disabled={favBusy}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         {/* CONTROLES DE BUSCA (Apenas para Ações e FIIs) */}
-        {mode !== 'educacao' && (
+        {mode !== 'educacao' && mode !== 'favoritos' && (
           <>
             <div className="profile-selector">
               <label htmlFor="profileSelect">Avaliar sob a ótica do Perfil:</label>
@@ -138,14 +391,14 @@ export default function Scanner() {
 
             <div className="search-box">
               <input type="text" placeholder={`Digite o ticker (${mode === 'acoes' ? 'ex: PETR4, BBAS3' : 'ex: MXRF11, HGLG11'})`} value={ticker} onChange={(e) => setTicker(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
-              <button onClick={handleSearch}>Pesquisar</button>
+              <button type="button" onClick={() => handleSearch()}>Pesquisar</button>
             </div>
           </>
         )}
 
         {/* ÁREA DE CONTEÚDO PRINCIPAL */}
         <div>
-          {mode === 'educacao' ? (
+          {mode === 'favoritos' ? null : mode === 'educacao' ? (
             
             /* =========================================
                SESSÃO: EDUCAÇÃO E SIMULADOR
@@ -246,12 +499,31 @@ export default function Scanner() {
               
               {result && status === 'idle' && (
                 <>
-                  <div className="results-header" style={{ marginBottom: '28px' }}>
-                    <div>{mode === 'acoes' ? 'Relatório Fundamentalista' : 'Relatório do Fundo'}</div>
-                    <span className="ticker-title">{result.ticker}</span>
-                    <span className="profile-badge" style={{ marginLeft: '0', marginTop: '8px', display: 'inline-block' }}>
-                      {result.perfilAtivo ? result.perfilAtivo.charAt(0).toUpperCase() + result.perfilAtivo.slice(1) : ''}
-                    </span>
+                  <div className="results-header report-header">
+                    <div className="report-header-inner">
+                      <div>{mode === 'acoes' ? 'Relatório Fundamentalista' : 'Relatório do Fundo'}</div>
+                      <span className="ticker-title">{result.ticker}</span>
+                      {result.perfilAtivo ? (
+                        <span className="profile-badge report-profile-badge">
+                          {perfilLabel(result.perfilAtivo)}
+                        </span>
+                      ) : null}
+                      {isLoggedIn() && (
+                        <button
+                          type="button"
+                          className={`favorito-toggle ${isFavorited ? 'is-active' : ''}`}
+                          onClick={toggleFavorito}
+                          disabled={favBusy}
+                          title={
+                            isFavorited
+                              ? 'Remover dos favoritos'
+                              : `Salvar favorito com perfil ${perfilLabel(result.perfilAtivo || profile)}`
+                          }
+                        >
+                          {isFavorited ? '★ Favoritado' : '☆ Favoritar'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {mode === 'acoes' ? (

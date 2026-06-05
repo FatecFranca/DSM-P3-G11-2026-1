@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import SiteShell from "@/components/SiteShell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,17 +39,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="min-h-full flex flex-col">
-        <header className="site-header">
-          <div className="container header-inner">
-            <a href="/" className="logo-link" aria-label="Invista+">
-              <img src="/logo.svg" alt="Invista+" className="site-logo" />
-            </a>
-            <div className="header-actions">
-              <a href="/login" className="btn-auth small">Entrar</a>
-            </div>
-          </div>
-        </header>
-        {children}
+        <SiteShell>{children}</SiteShell>
       </body>
     </html>
   );

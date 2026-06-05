@@ -6,6 +6,15 @@ import * as cheerio from 'cheerio';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { Usuario } from './models/noam.js';
+import { createOptionalAuth, createRequireAuth } from './middleware/auth.js';
+import { calcularClassificacaoGeral, persistirFluxoNoam } from './services/noam-persist.js';
+import {
+    adicionarFavorito,
+    listarFavoritos,
+    normalizarTipoAtivo,
+    removerFavorito,
+} from './services/favoritos.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -20,23 +29,12 @@ app.use(express.static('public')); // Garante que seu login.html e index.html se
 const mongoURI = process.env.MONGO_URI;
 
 mongoose.connect(mongoURI)
-    .then(() => console.log('✅ Banco de Dados NoSQL (MongoDB Atlas) conectado com sucesso!'))
-    .catch(err => console.error('❌ Erro ao conectar no MongoDB:', err));
-
-mongoose.connect(mongoURI)
     .then(() => console.log('✅ Banco de Dados NoSQL (MongoDB) conectado com sucesso!'))
     .catch(err => console.error('❌ Erro ao conectar no MongoDB:', err));
 
-// Criando a "Entidade" Usuario exatamente como no seu Diagrama NoAM
-const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    senhaHash: { type: String, required: true },
-    dataCadastro: { type: Date, default: Date.now }
-});
-
-const Usuario = mongoose.model('Usuario', userSchema);
-
-const JWT_SECRET = 'minha_chave_secreta_super_segura_2026'; // Chave para gerar os tokens
+const JWT_SECRET = process.env.JWT_SECRET || 'minha_chave_secreta_super_segura_2026';
+const optionalAuth = createOptionalAuth(JWT_SECRET);
+const requireAuth = createRequireAuth(JWT_SECRET);
 
 // ======================================================================
 // 2. ROTAS DE AUTENTICAÇÃO (O QUE O SEU LOGIN.HTML CHAMA)
@@ -91,7 +89,7 @@ app.post('/login', async (req, res) => {
         res.json({
             message: 'Login realizado com sucesso!',
             token,
-            user: { email: user.email }
+            user: { email: user.email, perfilInvestidor: user.perfilInvestidor || null }
         });
     } catch (error) {
         console.error(error);
@@ -486,7 +484,7 @@ function classifyFii(indicator, value, profile) {
     }
 }
 
-app.post('/api/acoes', async (req, res) => {
+app.post('/api/acoes', optionalAuth, async (req, res) => {
     const { ticker, profile } = req.body;
     if (!ticker) return res.status(400).json({ error: 'Ticker não informado' });
     const userProfile = profile || 'moderado';
@@ -549,7 +547,7 @@ app.post('/api/acoes', async (req, res) => {
             precoTeto8 = dividendoReais / 0.08; 
         }
 
-        res.json({
+        const payload = {
             ticker: ticker.toUpperCase(),
             perfilAtivo: userProfile,
             cotacao: { value: formatCurrency(cotacao), class: 'neutral' },
@@ -559,7 +557,7 @@ app.post('/api/acoes', async (req, res) => {
             roe: { value: formatPercent(roe), class: classifyAcao('roe', roe, userProfile) },
             margemLiquida: { value: formatPercent(margemLiquida), class: classifyAcao('margemLiquida', margemLiquida, userProfile) },
             divLiqPatrimonio: { value: formNum(divLiqPatrimonio), class: classifyAcao('divPatrimonio', divLiqPatrimonio, userProfile) },
-            cagr5a: { value: formatPercent(cagr5a), class: classifyAcao('cagr5a', cagr5a, userProfile) }, 
+            cagr5a: { value: formatPercent(cagr5a), class: classifyAcao('cagr5a', cagr5a, userProfile) },
             payout: { value: formatPercent(payout), class: classifyAcao('payout', payout, userProfile) },
             roic: { value: formatPercent(roic), class: classifyAcao('roic', roic, userProfile) },
             roa: { value: formatPercent(roa), class: classifyAcao('roa', roa, userProfile) },
@@ -574,15 +572,47 @@ app.post('/api/acoes', async (req, res) => {
             precoTeto8: { value: formatCurrency(precoTeto8), class: (precoTeto8 && cotacao < precoTeto8) ? 'good' : 'bad' },
             lpa: { value: formNum(lpa), class: 'neutral' },
             vpa: { value: formNum(vpa), class: 'neutral' }
-        });
+        };
+
+        if (req.usuarioId) {
+            await persistirFluxoNoam({
+                usuarioId: req.usuarioId,
+                ticker,
+                tipoAtivo: 'ACAO',
+                cotacao,
+                perfilUtilizado: userProfile,
+                sucesso: true,
+                setorNome: 'Ações',
+                setorDescricao: 'Mercado de ações brasileiro',
+                analise: {
+                    precoJustoGraham: valorGrahamPadrao ?? valorGrahamRev ?? null,
+                    precoTetoBazin: precoTeto6 ?? precoTeto8 ?? null,
+                    dividendYield: dy ?? null,
+                    pvp: pvp ?? null,
+                    classificacaoGeral: calcularClassificacaoGeral(payload),
+                },
+            });
+        }
+
+        res.json(payload);
 
     } catch (error) {
         console.error("Erro Ações:", error.message);
+        if (req.usuarioId) {
+            await persistirFluxoNoam({
+                usuarioId: req.usuarioId,
+                ticker,
+                tipoAtivo: 'ACAO',
+                cotacao: null,
+                perfilUtilizado: userProfile,
+                sucesso: false,
+            }).catch((err) => console.error('Erro ao persistir histórico (ações):', err.message));
+        }
         res.status(404).json({ error: 'Ativo não encontrado.' });
     }
 });
 
-app.post('/api/fiis', async (req, res) => {
+app.post('/api/fiis', optionalAuth, async (req, res) => {
     const { ticker, profile } = req.body;
     if (!ticker) return res.status(400).json({ error: 'Ticker não informado' });
     const userProfile = profile || 'moderado';
@@ -642,7 +672,9 @@ app.post('/api/fiis', async (req, res) => {
             vn = formatCurrency(ebnCalc * cotacao);
         }
 
-        res.json({
+        const segmentoNome = dictRaw['segmento'] && dictRaw['segmento'] !== '-' ? dictRaw['segmento'] : 'FIIs';
+
+        const payload = {
             ticker: ticker.toUpperCase(),
             perfilAtivo: userProfile,
             cotacao: { value: dictRaw['cotacao'] || formatCurrency(cotacao), class: 'neutral' },
@@ -654,7 +686,7 @@ app.post('/api/fiis', async (req, res) => {
             numeroCotistas: { value: dictRaw['numerodecotistas'] || '-', class: classifyFii('numeroCotistas', numeroCotistasMath, userProfile) },
             taxaAdministracao: { value: dictRaw['taxadeadministracao'] || '-', class: classifyFii('taxaAdministracao', taxaAdministracaoMath, userProfile) },
             variacao12m: { value: dictRaw['variacao12m'] || '-', class: classifyFii('variacao12m', variacao12mMath, userProfile) },
-            ebn: { value: ebn, class: 'good' }, 
+            ebn: { value: ebn, class: 'good' },
             vn: { value: vn, class: 'neutral' },
             ultimoRendimento: { value: dictRaw['ultimorendimento'] || '-', class: 'neutral' },
             vpa: { value: dictRaw['valpatrimonialpcota'] || dictRaw['valorpatrimonialpcota'] || '-', class: 'neutral' },
@@ -662,11 +694,108 @@ app.post('/api/fiis', async (req, res) => {
             mandato: { value: dictRaw['mandato'] || '-', class: 'neutral' },
             tipoFundo: { value: dictRaw['tipodefundo'] || '-', class: 'neutral' },
             tipoGestao: { value: dictRaw['tipodegestao'] || '-', class: 'neutral' }
-        });
+        };
+
+        if (req.usuarioId) {
+            await persistirFluxoNoam({
+                usuarioId: req.usuarioId,
+                ticker,
+                tipoAtivo: 'FII',
+                cotacao,
+                perfilUtilizado: userProfile,
+                sucesso: true,
+                setorNome: segmentoNome,
+                setorDescricao: `Segmento imobiliário: ${segmentoNome}`,
+                analise: {
+                    precoJustoGraham: null,
+                    precoTetoBazin: null,
+                    dividendYield: dyMath ?? null,
+                    pvp: pvpMath ?? null,
+                    classificacaoGeral: calcularClassificacaoGeral(payload),
+                },
+            });
+        }
+
+        res.json(payload);
 
     } catch (error) {
         console.error("Erro FIIs:", error.message);
+        if (req.usuarioId) {
+            await persistirFluxoNoam({
+                usuarioId: req.usuarioId,
+                ticker,
+                tipoAtivo: 'FII',
+                cotacao: null,
+                perfilUtilizado: userProfile,
+                sucesso: false,
+            }).catch((err) => console.error('Erro ao persistir histórico (FIIs):', err.message));
+        }
         res.status(404).json({ error: 'Fundo não encontrado.' });
+    }
+});
+
+// ======================================================================
+// 4. FAVORITOS (busca rápida com perfil salvo)
+// ======================================================================
+
+app.get('/api/favoritos', requireAuth, async (req, res) => {
+    try {
+        const tipoAtivo = normalizarTipoAtivo(req.query.tipoAtivo);
+        const favoritos = await listarFavoritos(req.usuarioId, tipoAtivo);
+        res.json({ favoritos });
+    } catch (error) {
+        console.error('Erro ao listar favoritos:', error);
+        res.status(500).json({ error: 'Erro ao listar favoritos.' });
+    }
+});
+
+app.post('/api/favoritos', requireAuth, async (req, res) => {
+    const { ticker, tipoAtivo, profile } = req.body;
+
+    if (!ticker?.trim()) {
+        return res.status(400).json({ error: 'Ticker não informado.' });
+    }
+
+    const tipo = normalizarTipoAtivo(tipoAtivo);
+    if (!tipo) {
+        return res.status(400).json({ error: 'tipoAtivo deve ser ACAO ou FII.' });
+    }
+
+    try {
+        const favorito = await adicionarFavorito({
+            usuarioId: req.usuarioId,
+            ticker: ticker.trim(),
+            tipoAtivo: tipo,
+            perfilUtilizado: profile,
+        });
+        res.status(201).json({ favorito });
+    } catch (error) {
+        console.error('Erro ao favoritar:', error);
+        res.status(500).json({ error: 'Erro ao salvar favorito.' });
+    }
+});
+
+app.delete('/api/favoritos/:ticker', requireAuth, async (req, res) => {
+    const tipoAtivo = normalizarTipoAtivo(req.query.tipoAtivo);
+    if (!tipoAtivo) {
+        return res.status(400).json({ error: 'Informe tipoAtivo (ACAO ou FII) na query.' });
+    }
+
+    try {
+        const removido = await removerFavorito({
+            usuarioId: req.usuarioId,
+            ticker: req.params.ticker,
+            tipoAtivo,
+        });
+
+        if (!removido) {
+            return res.status(404).json({ error: 'Favorito não encontrado.' });
+        }
+
+        res.json({ message: 'Favorito removido.' });
+    } catch (error) {
+        console.error('Erro ao remover favorito:', error);
+        res.status(500).json({ error: 'Erro ao remover favorito.' });
     }
 });
 

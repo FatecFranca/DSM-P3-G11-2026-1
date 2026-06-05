@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { isLoggedIn, setAuth } from "@/lib/auth";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function Login() {
   const router = useRouter();
@@ -10,6 +13,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
+  useEffect(() => {
+    if (isLoggedIn()) {
+      router.replace("/");
+    }
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
@@ -17,7 +26,7 @@ export default function Login() {
     const endpoint = isLoginMode ? "/login" : "/register";
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -26,9 +35,12 @@ export default function Login() {
 
       if (res.ok) {
         if (isLoginMode) {
-          localStorage.setItem("user_token", data.token);
-          localStorage.setItem("user_email", data.user.email);
-          router.push("/");
+          if (!data.token || !data.user?.email) {
+            setMessage({ text: "Resposta inválida do servidor.", type: "error" });
+            return;
+          }
+          setAuth(data.token, data.user.email);
+          router.replace("/");
         } else {
           setMessage({ text: "Conta criada! Faça login.", type: "success" });
           setTimeout(() => {

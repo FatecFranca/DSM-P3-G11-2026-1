@@ -50,6 +50,15 @@ class SetorAtivo {
   + String descricao [Opcional]
 }
 
+' ENTIDADE 6
+class Favorito {
+  + ObjectId _id [Obrigatório]
+  + String ticker [Obrigatório]
+  + String tipoAtivo [Obrigatório]
+  + String perfilUtilizado [Obrigatório]
+  + Date dataFavorito [Obrigatório]
+}
+
 ' ==========================================
 ' RELACIONAMENTOS, TIPOS E CARDINALIDADES
 ' ==========================================
@@ -65,5 +74,11 @@ HistoricoBusca "0..*" --> "1" AtivoFinanceiro : Associação >
 
 ' Agregação: Um Setor agrupa vários ativos, mas o ativo continua existindo se o setor sumir.
 SetorAtivo "1" o-- "0..*" AtivoFinanceiro : Agregação >
+
+' Composição: Favoritos pertencem ao usuário; guardam o perfil usado na busca.
+Usuario "1" *-- "0..*" Favorito : Composição >
+
+' Associação opcional ao ativo favoritado.
+Favorito "0..*" --> "0..1" AtivoFinanceiro : Associação >
 
 @enduml

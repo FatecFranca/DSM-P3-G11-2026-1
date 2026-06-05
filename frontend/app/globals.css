@@ -97,6 +97,22 @@ body {
   gap: 10px;
 }
 
+.header-user-email {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.btn-logout {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .btn-auth.small {
   display: inline-flex;
   align-items: center;
@@ -287,6 +303,197 @@ body {
 
 .search-box button:hover {
   background-color: var(--primary-hover);
+}
+
+.favoritos-bar {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.favoritos-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.favoritos-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.favorito-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.favorito-chip:hover {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+.favorito-chip strong {
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.favorito-chip span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.report-header {
+  margin-bottom: 28px;
+}
+
+.report-header-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  width: 100%;
+}
+
+.report-profile-badge {
+  margin-left: 0;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.favoritos-page {
+  margin-top: 8px;
+}
+
+.favoritos-subtabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.favoritos-panel {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.favorito-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.favorito-card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.favorito-card-ticker {
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.favorito-card-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.favorito-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.favorito-card-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.favorito-card-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.favorito-card-btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.favorito-card-btn.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: #fff;
+}
+
+.favorito-card-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.favorito-toggle {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.favorito-toggle:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.favorito-toggle.is-active {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #b45309;
+}
+
+.favorito-toggle:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 @media (max-width: 768px) {
